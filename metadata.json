@@ -1,6 +1,6 @@
 {
-  "name": "EdgePanel",
-  "description": "لوحة الحافة الذكية المستوحاة من أندرويد وسامسونج مع محاكي تفاعلي وأكواد Kotlin و Jetpack Compose الجاهزة للإنتاج",
+  "name": "EdgePanel Pixel 8 (Android 17)",
+  "description": "لوحة الحافة الذكية المستوحاة من سامسونج والمخصصة لهاتف Google Pixel 8 ونظام Android 17 مع محاكي تفاعلي وأكواد Kotlin و Jetpack Compose",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
