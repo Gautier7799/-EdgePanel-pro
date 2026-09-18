@@ -256,6 +256,9 @@ export default function App() {
                 setIsPanelOpen(true);
               }}
               onOpenCodeModal={() => setShowCodeModal(true)}
+              apps={apps}
+              onTogglePinApp={handleTogglePinApp}
+              onAddCustomApp={handleAddCustomApp}
             />
           </div>
         ) : (

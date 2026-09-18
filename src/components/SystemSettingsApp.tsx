@@ -16,29 +16,40 @@ import {
   Palette,
   ExternalLink,
   ChevronRight,
-  Info
+  Info,
+  Grid,
+  Plus,
+  Trash2,
+  MoveVertical
 } from 'lucide-react';
-import { PanelSettings } from '../types';
+import { PanelSettings, AppItem } from '../types';
 
 interface SystemSettingsAppProps {
   settings: PanelSettings;
   onUpdateSettings: (newSettings: Partial<PanelSettings>) => void;
   onOpenPanelPreview: () => void;
   onOpenCodeModal: () => void;
+  apps?: AppItem[];
+  onTogglePinApp?: (appId: string) => void;
+  onAddCustomApp?: (name: string, nameAr: string) => void;
 }
 
 export const SystemSettingsApp: React.FC<SystemSettingsAppProps> = ({
   settings,
   onUpdateSettings,
   onOpenPanelPreview,
-  onOpenCodeModal
+  onOpenCodeModal,
+  apps = [],
+  onTogglePinApp,
+  onAddCustomApp
 }) => {
   // حالة الأذونات الافتراضية كما في أندرويد 17
   const [overlayGranted, setOverlayGranted] = useState(true);
   const [accessibilityGranted, setAccessibilityGranted] = useState(true);
   const [batteryOptimizationDisabled, setBatteryOptimizationDisabled] = useState(true);
   const [serviceRunning, setServiceRunning] = useState(true);
-  const [activeTab, setActiveTab] = useState<'main' | 'appearance' | 'permissions'>('main');
+  const [activeTab, setActiveTab] = useState<'main' | 'apps' | 'appearance' | 'permissions'>('main');
+  const [customAppName, setCustomAppName] = useState('');
 
   return (
     <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl font-['Cairo',sans-serif] text-slate-100">
@@ -69,21 +80,32 @@ export const SystemSettingsApp: React.FC<SystemSettingsAppProps> = ({
       </div>
 
       {/* تبويبات الإعدادات */}
-      <div className="flex border-b border-slate-800 bg-slate-950/40 px-6 gap-2">
+      <div className="flex border-b border-slate-800 bg-slate-950/40 px-6 gap-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('main')}
-          className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
+          className={`py-3 px-3.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex items-center gap-2 ${
             activeTab === 'main'
               ? 'border-cyan-400 text-cyan-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>الإعدادات العامة</span>
+          <span>موضع السطر والمقبض</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('apps')}
+          className={`py-3 px-3.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex items-center gap-2 ${
+            activeTab === 'apps'
+              ? 'border-cyan-400 text-cyan-400'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Grid className="w-4 h-4" />
+          <span>تطبيقات واختصارات اللوحة ({apps.filter(a => a.isPinned).length})</span>
         </button>
         <button
           onClick={() => setActiveTab('permissions')}
-          className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
+          className={`py-3 px-3.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex items-center gap-2 ${
             activeTab === 'permissions'
               ? 'border-cyan-400 text-cyan-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -94,7 +116,7 @@ export const SystemSettingsApp: React.FC<SystemSettingsAppProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('appearance')}
-          className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
+          className={`py-3 px-3.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex items-center gap-2 ${
             activeTab === 'appearance'
               ? 'border-cyan-400 text-cyan-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -132,9 +154,9 @@ export const SystemSettingsApp: React.FC<SystemSettingsAppProps> = ({
               </button>
             </div>
 
-            {/* موضع المقبض واليد المستخدمة */}
-            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
-              <h3 className="text-xs font-bold text-slate-300">موضع مقبض اللوحة:</h3>
+            {/* موضع المقبض واليد المستخدمة والارتفاع على الشاشة */}
+            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
+              <h3 className="text-xs font-bold text-slate-300">موضع سطر مقبض الحافة على الشاشة:</h3>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => onUpdateSettings({ side: 'right' })}
@@ -144,7 +166,7 @@ export const SystemSettingsApp: React.FC<SystemSettingsAppProps> = ({
                       : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
                   }`}
                 >
-                  <span>الجانب الأيمن (الافتراضي)</span>
+                  <span>سطر على الجانب الأيمن</span>
                 </button>
                 <button
                   onClick={() => onUpdateSettings({ side: 'left' })}
@@ -154,8 +176,30 @@ export const SystemSettingsApp: React.FC<SystemSettingsAppProps> = ({
                       : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
                   }`}
                 >
-                  <span>الجانب الأيسر</span>
+                  <span>سطر على الجانب الأيسر</span>
                 </button>
+              </div>
+
+              {/* تحريك وتغيير مكان السطر للأعلى وللأسفل في الشاشة */}
+              <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-300 font-bold">مكان السطر على الشاشة (عمودياً):</span>
+                  <span className="text-cyan-400 font-mono font-bold">{settings.handlePositionPercent}% من أعلى الشاشة</span>
+                </div>
+                <input
+                  type="range"
+                  min="15"
+                  max="85"
+                  step="1"
+                  value={settings.handlePositionPercent}
+                  onChange={(e) => onUpdateSettings({ handlePositionPercent: parseInt(e.target.value) })}
+                  className="w-full accent-cyan-400 cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500 font-semibold">
+                  <span>أعلى الشاشة (15%)</span>
+                  <span>المنتصف (50%)</span>
+                  <span>أسفل الشاشة (85%)</span>
+                </div>
               </div>
             </div>
 
@@ -196,7 +240,79 @@ export const SystemSettingsApp: React.FC<SystemSettingsAppProps> = ({
           </div>
         )}
 
-        {/* التبويب 2: أذونات وصلاحيات النظام */}
+        {/* التبويب 2: إدارة التطبيقات والاختصارات والويدجت (Widgets) */}
+        {activeTab === 'apps' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/20 text-xs text-cyan-200">
+              يمكنك هنا تحديد أيقونات التطبيقات التي تظهر في لوحة الحافة، أو إضافة أيقونات جديدة وتثبيتها مثل نظام سامسونج.
+            </div>
+
+            {/* التطبيقات المثبتة في اللوحة حالياً */}
+            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-300">أيقونات التطبيقات في اللوحة:</h3>
+                <span className="text-[11px] text-cyan-400 font-bold">{apps.filter(a => a.isPinned).length} تطبيق مثبت</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {apps.map((app) => (
+                  <div
+                    key={app.id}
+                    onClick={() => onTogglePinApp?.(app.id)}
+                    className={`p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                      app.isPinned
+                        ? 'bg-cyan-500/15 border-cyan-500/40 text-white'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                        style={{ backgroundColor: app.color }}
+                      >
+                        {app.nameAr.charAt(0)}
+                      </div>
+                      <span className="text-xs font-semibold">{app.nameAr}</span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      app.isPinned ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-500'
+                    }`}>
+                      {app.isPinned ? 'مثبت ✓' : 'إضافة +'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* إضافة تطبيق جديد أو اختصار */}
+            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <h3 className="text-xs font-bold text-slate-300">إضافة تطبيق أو ويدجت سريع:</h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="اسم التطبيق أو الاختصار (مثال: تيليجرام، سبوتيفاي)..."
+                  value={customAppName}
+                  onChange={(e) => setCustomAppName(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                />
+                <button
+                  onClick={() => {
+                    if (customAppName.trim()) {
+                      onAddCustomApp?.(customAppName, customAppName);
+                      setCustomAppName('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold rounded-xl transition-all flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>إضافة</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* التبويب 3: أذونات وصلاحيات النظام */}
         {activeTab === 'permissions' && (
           <div className="space-y-4">
             <div className="p-3.5 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 flex items-start gap-3">
