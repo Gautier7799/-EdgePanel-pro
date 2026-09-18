@@ -1,0 +1,6 @@
+{
+  "name": "EdgePanel",
+  "description": "لوحة الحافة الذكية المستوحاة من أندرويد وسامسونج مع محاكي تفاعلي وأكواد Kotlin و Jetpack Compose الجاهزة للإنتاج",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
