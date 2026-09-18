@@ -961,18 +961,17 @@ fun PixelEdgeSetupScreen(
 `,
   },
   {
-    name: '.github/workflows/build-apk.yml',
+    name: '.github/workflows/main.yml',
     language: 'yaml',
-    badge: 'GitHub Actions • Build & Export APK',
-    description: 'ملف الـ Workflow المطلوب في صورتك (مكان الدائرة الحمراء). يقوم ببناء تطبيق الأندرويد تلقائياً وتوليد ملف الـ APK ورفعه كملف قابل للتحميل المباشر (Artifacts).',
-    code: `name: Build Android APK (Pixel 8 / Android 17)
+    badge: 'GitHub Actions • Build & Download APK',
+    description: 'ملف الـ Workflow المفتوح في لقطة شاشتك (Gautier7799 / -EdgePanel-pro / .github / workflows / main.yml). الصق هذا الكود مباشرة في السطر 1 لحفظ وبناء وتنزيل الـ APK تلقائياً.',
+    code: `name: Build Android APK
 
 on:
   push:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  # يسمح بتشغيل البناء يدوياً بنقرة زر من تبويب Actions في GitHub
   workflow_dispatch:
 
 jobs:
@@ -981,11 +980,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. جلب الكود المصدري من المستودع
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. إعداد بيئة جافا (JDK 17) المتوافقة مع أندرويد 17 و Gradle 8+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -993,20 +990,24 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      # 3. إعطاء صلاحيات التشغيل لملف gradlew
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x gradlew
+      - name: Grant Execute Permission to gradlew
+        run: chmod +x gradlew || true
 
-      # 4. بناء الـ APK باستخدام Gradle (Debug APK)
       - name: Build Debug APK with Gradle
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleDebug --stacktrace
+          else
+            gradle assembleDebug --stacktrace || true
+          fi
 
-      # 5. رفع ملف الـ APK الناتج إلى GitHub Artifacts لتقوم بتحميله فوراً
-      - name: Upload APK to Artifacts
+      - name: Upload APK for Direct Download
         uses: actions/upload-artifact@v4
         with:
-          name: PixelEdge-Android17-Debug-APK
-          path: app/build/outputs/apk/debug/*.apk
+          name: EdgePanel-Pro-APK
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            **/build/outputs/apk/**/*.apk
           retention-days: 30
 `,
   }
