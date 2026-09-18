@@ -22,6 +22,7 @@ import { PanelSettings, AppItem, ContactItem, ClipboardItem, DeviceModel, MonetP
 import { INITIAL_APPS, INITIAL_CONTACTS, INITIAL_CLIPBOARD, DEFAULT_SETTINGS } from './data/initialData';
 import { PhoneFrame } from './components/PhoneFrame';
 import { AndroidCodeModal } from './components/AndroidCodeModal';
+import { SystemSettingsApp } from './components/SystemSettingsApp';
 
 export default function App() {
   // Persistence with localStorage
@@ -62,6 +63,7 @@ export default function App() {
   });
 
   // UI state
+  const [viewMode, setViewMode] = useState<'app' | 'simulator'>('app');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
@@ -202,6 +204,32 @@ export default function App() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Switch View Mode: App vs Phone Simulator */}
+          <div className="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+            <button
+              onClick={() => setViewMode('app')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                viewMode === 'app'
+                  ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>تطبيق النظام (الإعدادات والصلوحية)</span>
+            </button>
+            <button
+              onClick={() => setViewMode('simulator')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                viewMode === 'simulator'
+                  ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>محاكي هاتف Pixel 8</span>
+            </button>
+          </div>
+
           {/* Kotlin Code Button */}
           <button
             id="view-android-code-btn"
@@ -216,166 +244,176 @@ export default function App() {
       </header>
 
       {/* Main Interactive Studio Body */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center p-2 sm:p-4 gap-4 max-w-7xl mx-auto w-full">
-        {/* Left Side (Desktop): Technical Insights & Quick Customizer */}
-        <aside className="w-full lg:w-80 flex flex-col gap-3 order-2 lg:order-1">
-          {/* Pixel 8 & Android 17 Highlights */}
-          <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-2.5">
-            <div className="flex items-center gap-2 text-cyan-400">
-              <Smartphone className="w-4 h-4" />
-              <h3 className="text-xs font-bold text-white">Google Pixel 8 & Android 17</h3>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              هواتف Pixel لا تحتوي على ميزة Edge Panel المدمجة في أجهزة سامسونج. تم تصميم هذا التطبيق لسد هذه الفجوة بأفضل المعايير:
-            </p>
-            <div className="space-y-1 text-[11px] text-slate-300">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>شريط كبسولي عائم مطابق تماماً للفيديو</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>مؤشر سحب دائري باللون الأزرق &lt; أثناء الإيماءة</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>سلاسة 120Hz لشاشة Pixel 8 ومعالج Tensor G3</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>ألوان ديناميكية متناغمة مع Material You (Monet)</span>
-              </div>
-            </div>
+      <main className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-7xl mx-auto w-full">
+        {viewMode === 'app' ? (
+          /* تطبيق إعدادات النظام الأصلي مع تفعيل الأذونات والصلوحية */
+          <div className="w-full flex flex-col items-center justify-center animate-in fade-in duration-300">
+            <SystemSettingsApp
+              settings={settings}
+              onUpdateSettings={handleUpdateSettings}
+              onOpenPanelPreview={() => {
+                setViewMode('simulator');
+                setIsPanelOpen(true);
+              }}
+              onOpenCodeModal={() => setShowCodeModal(true)}
+            />
           </div>
-
-          {/* Device & Layout Quick Selector */}
-          <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-2.5">
-            <h4 className="text-xs font-bold text-slate-300">التحكم السريع بالمظهر:</h4>
-            
-            <div className="space-y-2">
-              <div>
-                <label className="text-[10px] text-slate-400 block mb-1">نوع الجهاز:</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => handleUpdateSettings({ deviceModel: 'pixel-8', androidVersion: 'android-17' })}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.deviceModel === 'pixel-8'
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400'
-                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
-                    }`}
-                  >
-                    Google Pixel 8
-                  </button>
-                  <button
-                    onClick={() => handleUpdateSettings({ deviceModel: 'galaxy-s24', androidVersion: 'oneui-6' })}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.deviceModel === 'galaxy-s24'
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400'
-                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
-                    }`}
-                  >
-                    Galaxy S24
-                  </button>
+        ) : (
+          /* محاكي هاتف Pixel 8 للتحقق من طريقة ظهور اللوحة على النظام */
+          <div className="w-full flex flex-col lg:flex-row items-center justify-center gap-4 animate-in fade-in duration-300">
+            {/* Left Side (Desktop): Technical Insights & Quick Customizer */}
+            <aside className="w-full lg:w-80 flex flex-col gap-3 order-2 lg:order-1">
+              {/* Pixel 8 & Android 17 Highlights */}
+              <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-2 text-cyan-400">
+                  <Smartphone className="w-4 h-4" />
+                  <h3 className="text-xs font-bold text-white">Google Pixel 8 & Android 17</h3>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  هواتف Pixel لا تحتوي على ميزة Edge Panel المدمجة في أجهزة سامسونج. تم تصميم هذا التطبيق لسد هذه الفجوة بأفضل المعايير:
+                </p>
+                <div className="space-y-1 text-[11px] text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>شريط كبسولي عائم مطابق تماماً للفيديو</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>مؤشر سحب دائري باللون الأزرق &lt; أثناء الإيماءة</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>سلاسة 120Hz لشاشة Pixel 8 ومعالج Tensor G3</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>ألوان ديناميكية متناغمة مع Material You (Monet)</span>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] text-slate-400 block mb-1">تخطيط الكبسولة (لقطة الشاشة):</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => handleUpdateSettings({ capsuleColumns: 2, panelLayoutMode: 'floating-capsule' })}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.capsuleColumns === 2 && settings.panelLayoutMode === 'floating-capsule'
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
-                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
-                    }`}
-                  >
-                    عمودين (مثل الصورة)
-                  </button>
-                  <button
-                    onClick={() => handleUpdateSettings({ capsuleColumns: 1, panelLayoutMode: 'floating-capsule' })}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.capsuleColumns === 1 && settings.panelLayoutMode === 'floating-capsule'
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
-                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
-                    }`}
-                  >
-                    عمود واحد (الفيديو)
-                  </button>
+              {/* Device & Layout Quick Selector */}
+              <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+                <h4 className="text-xs font-bold text-slate-300">التحكم السريع بالمظهر:</h4>
+                
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">نوع الجهاز:</label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => handleUpdateSettings({ deviceModel: 'pixel-8', androidVersion: 'android-17' })}
+                        className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                          settings.deviceModel === 'pixel-8'
+                            ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                            : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        Google Pixel 8
+                      </button>
+                      <button
+                        onClick={() => handleUpdateSettings({ deviceModel: 'galaxy-s24', androidVersion: 'oneui-6' })}
+                        className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                          settings.deviceModel === 'galaxy-s24'
+                            ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                            : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        Galaxy S24
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">تخطيط الكبسولة (لقطة الشاشة):</label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => handleUpdateSettings({ capsuleColumns: 2, panelLayoutMode: 'floating-capsule' })}
+                        className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                          settings.capsuleColumns === 2 && settings.panelLayoutMode === 'floating-capsule'
+                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
+                            : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        عمودين (مثل الصورة)
+                      </button>
+                      <button
+                        onClick={() => handleUpdateSettings({ capsuleColumns: 1, panelLayoutMode: 'floating-capsule' })}
+                        className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                          settings.capsuleColumns === 1 && settings.panelLayoutMode === 'floating-capsule'
+                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
+                            : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        عمود واحد (الفيديو)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">لون الزجاج المصنفر:</label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => handleUpdateSettings({ capsuleStyle: 'frosted-light' })}
+                        className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                          settings.capsuleStyle === 'frosted-light'
+                            ? 'bg-white text-slate-950 border-white shadow-sm font-black'
+                            : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        أبيض مصنفر (الصورة)
+                      </button>
+                      <button
+                        onClick={() => handleUpdateSettings({ capsuleStyle: 'frosted-dark' })}
+                        className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                          settings.capsuleStyle === 'frosted-dark'
+                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
+                            : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                        }`}
+                      >
+                        زجاج داكن (Dark)
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] text-slate-400 block mb-1">لون الزجاج المصنفر:</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => handleUpdateSettings({ capsuleStyle: 'frosted-light' })}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.capsuleStyle === 'frosted-light'
-                        ? 'bg-white text-slate-950 border-white shadow-sm font-black'
-                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
-                    }`}
-                  >
-                    أبيض مصنفر (الصورة)
-                  </button>
-                  <button
-                    onClick={() => handleUpdateSettings({ capsuleStyle: 'frosted-dark' })}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.capsuleStyle === 'frosted-dark'
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
-                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
-                    }`}
-                  >
-                    زجاج داكن (Dark)
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Shortcut to Open Android Code & GitHub Actions */}
-          <div className="p-4 rounded-3xl bg-gradient-to-br from-cyan-950/40 to-slate-900 border border-cyan-500/20 text-center space-y-2.5">
-            <span className="text-xs font-bold text-cyan-200 block">جاهز للبناء والتصدير (Android Studio & GitHub)؟</span>
-            <p className="text-[10px] text-slate-400">
-              انسخ أكواد Kotlin أو ملف <code className="text-cyan-300">build-apk.yml</code> لبناء الـ APK تلقائياً على GitHub.
-            </p>
-            <div className="flex flex-col gap-1.5">
+              {/* Back to App Settings Button */}
               <button
-                onClick={() => setShowCodeModal(true)}
-                className="w-full py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold rounded-xl border border-cyan-500/30 transition-colors flex items-center justify-center gap-1.5"
+                onClick={() => setViewMode('app')}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-bold rounded-2xl border border-slate-800 transition-colors flex items-center justify-center gap-2"
               >
-                <Code2 className="w-3.5 h-3.5" />
-                <span>أكواد المشروع و GitHub Actions</span>
+                <Sliders className="w-4 h-4 text-cyan-400" />
+                <span>العودة لشاشة تطبيق إعدادات النظام</span>
               </button>
+            </aside>
+
+            {/* Center: The Phone Simulator with the Live Edge Panel */}
+            <div className="flex-1 flex flex-col items-center justify-center order-1 lg:order-2 w-full">
+              <PhoneFrame
+                isFullScreen={isFullScreen}
+                onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
+                isPanelOpen={isPanelOpen}
+                onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
+                onClosePanel={() => setIsPanelOpen(false)}
+                settings={settings}
+                onUpdateSettings={handleUpdateSettings}
+                apps={apps}
+                contacts={contacts}
+                clipboardItems={clipboardItems}
+                onLaunchApp={handleLaunchApp}
+                onTogglePinApp={handleTogglePinApp}
+                onAddCustomApp={handleAddCustomApp}
+                onContactAction={handleContactAction}
+                onAddContact={handleAddContact}
+                onCopyClipboard={handleCopyClipboard}
+                onTogglePinClipboard={handleTogglePinClipboard}
+                onDeleteClipboard={handleDeleteClipboard}
+                onAddClipboard={handleAddClipboard}
+                activeToast={activeToast}
+              />
             </div>
           </div>
-        </aside>
-
-        {/* Center: The Phone Simulator with the Live Edge Panel */}
-        <div className="flex-1 flex flex-col items-center justify-center order-1 lg:order-2 w-full">
-          <PhoneFrame
-            isFullScreen={isFullScreen}
-            onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
-            isPanelOpen={isPanelOpen}
-            onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
-            onClosePanel={() => setIsPanelOpen(false)}
-            settings={settings}
-            onUpdateSettings={handleUpdateSettings}
-            apps={apps}
-            contacts={contacts}
-            clipboardItems={clipboardItems}
-            onLaunchApp={handleLaunchApp}
-            onTogglePinApp={handleTogglePinApp}
-            onAddCustomApp={handleAddCustomApp}
-            onContactAction={handleContactAction}
-            onAddContact={handleAddContact}
-            onCopyClipboard={handleCopyClipboard}
-            onTogglePinClipboard={handleTogglePinClipboard}
-            onDeleteClipboard={handleDeleteClipboard}
-            onAddClipboard={handleAddClipboard}
-            activeToast={activeToast}
-          />
-        </div>
+        )}
       </main>
 
       {/* Android Kotlin & Compose Source Code Modal */}
