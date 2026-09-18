@@ -21,25 +21,58 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle'
+          # لا نضع cache: gradle حتى لا يفشل البناء في حال عدم وجود ملفات gradle أولية
 
-      - name: Grant Execute Permission to gradlew
-        run: chmod +x gradlew || true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      - name: Build Debug APK with Gradle
+      - name: Build Android APK
         run: |
+          echo "=== 1. فحص نوع المشروع وتجهيز البناء ==="
+          
+          # الحالة الأولى: إذا كان المشروع يحتوي على ملف gradlew لنظام أندرويد
           if [ -f "./gradlew" ]; then
+            echo "وجِد مشروع أندرويد قياسي مع gradlew..."
+            chmod +x gradlew
             ./gradlew assembleDebug --stacktrace
+            
+          # الحالة الثانية: مشروع أندرويد فرعي داخل مجلد android
+          elif [ -f "./android/gradlew" ]; then
+            echo "وجِد مجلد android مع gradlew..."
+            chmod +x ./android/gradlew
+            cd android
+            ./gradlew assembleDebug --stacktrace
+            cd ..
+            
+          # الحالة الثالثة: مشروع الويب (React / Vite) - نقوم بتجهيز Capacitor وبناء الـ APK تلقائياً
+          elif [ -f "package.json" ]; then
+            echo "تم اكتشاف مشروع ويب (React/Vite). جاري بناء الـ APK عبر محرك أندرويد..."
+            npm install --legacy-peer-deps || npm install
+            npm run build
+            
+            # تثبيت مكتبات Capacitor لتحويل التطبيق إلى APK أصلي
+            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev
+            npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
+            npx cap add android
+            
+            echo "بناء حزمة APK لنظام أندرويد..."
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleDebug --stacktrace
+            cd ..
           else
-            echo "Gradle wrapper not found, building standard android project..."
-            gradle assembleDebug --stacktrace || true
+            echo "خطأ: لم يتم العثور على ملفات أندرويد أو package.json"
+            exit 1
           fi
 
-      - name: Upload APK to Artifacts (Direct Download)
+      - name: Upload APK to Artifacts (تحميل مباشر)
         uses: actions/upload-artifact@v4
         with:
-          name: EdgePanel-Pro-Debug-APK
+          name: EdgePanel-Pro-APK
           path: |
+            android/app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/debug/*.apk
-            **/build/outputs/apk/**/*.apk
+            **/outputs/apk/**/*.apk
           retention-days: 30

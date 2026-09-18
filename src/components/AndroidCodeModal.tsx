@@ -965,7 +965,7 @@ fun PixelEdgeSetupScreen(
     language: 'yaml',
     badge: 'GitHub Actions • Build & Download APK',
     description: 'ملف الـ Workflow المفتوح في لقطة شاشتك (Gautier7799 / -EdgePanel-pro / .github / workflows / main.yml). الصق هذا الكود مباشرة في السطر 1 لحفظ وبناء وتنزيل الـ APK تلقائياً.',
-    code: `name: Build Android APK
+    code: `name: Build and Release Android APK
 
 on:
   push:
@@ -976,38 +976,55 @@ on:
 
 jobs:
   build:
-    name: Build & Generate APK
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Java JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle'
 
-      - name: Grant Execute Permission to gradlew
-        run: chmod +x gradlew || true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      - name: Build Debug APK with Gradle
+      - name: Build Android APK
         run: |
+          # 1. إذا وجد مشروع أندرويد قياسي
           if [ -f "./gradlew" ]; then
+            chmod +x gradlew
             ./gradlew assembleDebug --stacktrace
-          else
-            gradle assembleDebug --stacktrace || true
+          # 2. إذا كان داخل مجلد android
+          elif [ -f "./android/gradlew" ]; then
+            chmod +x ./android/gradlew
+            cd android && ./gradlew assembleDebug --stacktrace && cd ..
+          # 3. إذا كان مشروع ويب React/Vite: نقوم ببنائه وحزمه إلى APK فوراً
+          elif [ -f "package.json" ]; then
+            npm install --legacy-peer-deps || npm install
+            npm run build
+            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev
+            npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
+            npx cap add android
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleDebug --stacktrace
+            cd ..
           fi
 
-      - name: Upload APK for Direct Download
+      - name: Upload APK to Artifacts (تحميل مباشر)
         uses: actions/upload-artifact@v4
         with:
           name: EdgePanel-Pro-APK
           path: |
+            android/app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/debug/*.apk
-            **/build/outputs/apk/**/*.apk
+            **/outputs/apk/**/*.apk
           retention-days: 30
 `,
   }
