@@ -333,19 +333,21 @@ export default function App() {
             </div>
           </div>
 
-          {/* Quick Shortcut to Open Android Code */}
-          <div className="p-4 rounded-3xl bg-gradient-to-br from-cyan-950/40 to-slate-900 border border-cyan-500/20 text-center space-y-2">
-            <span className="text-xs font-bold text-cyan-200 block">جاهز لتشغيل الكود في Android Studio؟</span>
+          {/* Quick Shortcut to Open Android Code & GitHub Actions */}
+          <div className="p-4 rounded-3xl bg-gradient-to-br from-cyan-950/40 to-slate-900 border border-cyan-500/20 text-center space-y-2.5">
+            <span className="text-xs font-bold text-cyan-200 block">جاهز للبناء والتصدير (Android Studio & GitHub)؟</span>
             <p className="text-[10px] text-slate-400">
-              انسخ <code className="text-cyan-300">PixelEdgeOverlayService.kt</code> والأكواد الكاملة بنقرة واحدة.
+              انسخ أكواد Kotlin أو ملف <code className="text-cyan-300">build-apk.yml</code> لبناء الـ APK تلقائياً على GitHub.
             </p>
-            <button
-              onClick={() => setShowCodeModal(true)}
-              className="w-full py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold rounded-xl border border-cyan-500/30 transition-colors flex items-center justify-center gap-1.5"
-            >
-              <Code2 className="w-3.5 h-3.5" />
-              <span>عرض ونسخ الأكواد (API 36)</span>
-            </button>
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={() => setShowCodeModal(true)}
+                className="w-full py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold rounded-xl border border-cyan-500/30 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                <span>أكواد المشروع و GitHub Actions</span>
+              </button>
+            </div>
           </div>
         </aside>
 
