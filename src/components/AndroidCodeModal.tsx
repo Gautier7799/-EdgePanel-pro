@@ -989,30 +989,39 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Node.js
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Build Android APK
         run: |
-          # 1. إذا وجد مشروع أندرويد قياسي
           if [ -f "./gradlew" ]; then
             chmod +x gradlew
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
-          # 2. إذا كان داخل مجلد android
           elif [ -f "./android/gradlew" ]; then
-            chmod +x ./android/gradlew
-            cd android && ./gradlew assembleDebug --stacktrace && cd ..
-          # 3. إذا كان مشروع ويب React/Vite: نقوم ببنائه وحزمه إلى APK فوراً
-          elif [ -f "package.json" ]; then
-            npm install --legacy-peer-deps || npm install
-            npm run build
-            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev
-            npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
-            npx cap add android
             cd android
             chmod +x gradlew
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
+            ./gradlew assembleDebug --stacktrace
+            cd ..
+          elif [ -f "package.json" ]; then
+            npm install --legacy-peer-deps
+            npm run build
+            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev --legacy-peer-deps
+            if [ ! -d "android" ]; then
+              npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
+              npx cap add android
+            else
+              npx cap sync android
+            fi
+            cd android
+            chmod +x gradlew
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
             cd ..
           fi

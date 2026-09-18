@@ -21,49 +21,63 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-          # لا نضع cache: gradle حتى لا يفشل البناء في حال عدم وجود ملفات gradle أولية
 
-      - name: Set up Node.js
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache-dependency-path: package-lock.json
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Build Android APK
         run: |
-          echo "=== 1. فحص نوع المشروع وتجهيز البناء ==="
+          echo "=== 1. فحص وتجهيز بناء تطبيق Android ==="
           
-          # الحالة الأولى: إذا كان المشروع يحتوي على ملف gradlew لنظام أندرويد
+          # الحالة 1: إذا كان المشروع يحتوي على gradlew في المجلد الرئيسي
           if [ -f "./gradlew" ]; then
             echo "وجِد مشروع أندرويد قياسي مع gradlew..."
             chmod +x gradlew
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
             
-          # الحالة الثانية: مشروع أندرويد فرعي داخل مجلد android
+          # الحالة 2: إذا كان داخل مجلد android فرعي
           elif [ -f "./android/gradlew" ]; then
             echo "وجِد مجلد android مع gradlew..."
-            chmod +x ./android/gradlew
             cd android
+            chmod +x gradlew
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
             cd ..
             
-          # الحالة الثالثة: مشروع الويب (React / Vite) - نقوم بتجهيز Capacitor وبناء الـ APK تلقائياً
+          # الحالة 3: مشروع الويب (React / Vite) - نقوم ببنائه وحزمه إلى APK فوراً
           elif [ -f "package.json" ]; then
-            echo "تم اكتشاف مشروع ويب (React/Vite). جاري بناء الـ APK عبر محرك أندرويد..."
-            npm install --legacy-peer-deps || npm install
+            echo "تم اكتشاف مشروع ويب. جاري التجهيز والبناء بحل تعارض التبعات..."
+            
+            # تثبيت الحزم مع تخطي تعارض الإصدارات
+            npm install --legacy-peer-deps
             npm run build
             
-            # تثبيت مكتبات Capacitor لتحويل التطبيق إلى APK أصلي
-            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev
-            npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
-            npx cap add android
+            # تثبيت حزم كاباسيتور مع خيار legacy-peer-deps لتجنب الخطأ
+            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev --legacy-peer-deps
             
-            echo "بناء حزمة APK لنظام أندرويد..."
+            # تهيئة مشروع الأندرويد إذا لم يكن مهيأ مسبقاً
+            if [ ! -d "android" ]; then
+              npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
+              npx cap add android
+            else
+              npx cap sync android
+            fi
+            
+            echo "بدء تجميع ملف الـ APK لنظام أندرويد..."
             cd android
             chmod +x gradlew
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
             cd ..
           else
-            echo "خطأ: لم يتم العثور على ملفات أندرويد أو package.json"
+            echo "خطأ: لم يتم العثور على ملفات المشروع"
             exit 1
           fi
 
