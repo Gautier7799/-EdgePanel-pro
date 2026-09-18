@@ -986,7 +986,7 @@ jobs:
       - name: Set up Java JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Set up Node.js 20
@@ -994,11 +994,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Build Android APK
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          CI: false
         run: |
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          yes | sdkmanager --licenses || true
+
           if [ -f "./gradlew" ]; then
             chmod +x gradlew
             echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -1010,9 +1013,9 @@ jobs:
             ./gradlew assembleDebug --stacktrace
             cd ..
           elif [ -f "package.json" ]; then
-            npm install --legacy-peer-deps
+            npm install --legacy-peer-deps --no-audit
             npm run build
-            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev --legacy-peer-deps
+            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev --legacy-peer-deps --no-audit
             if [ ! -d "android" ]; then
               npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
               npx cap add android

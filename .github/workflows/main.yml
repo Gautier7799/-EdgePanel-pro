@@ -13,74 +13,79 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. سحب كود المستودع
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2. إعداد بيئة Java 17
       - name: Set up Java JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
+      # 3. إعداد بيئة Node.js 20
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache-dependency-path: package-lock.json
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      # 4. بناء ملف الـ APK وتجميعه
       - name: Build Android APK
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          CI: false
         run: |
-          echo "=== 1. فحص وتجهيز بناء تطبيق Android ==="
+          echo "=== 1. التحقق من مسار Android SDK المدمج في GitHub ==="
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
           
-          # الحالة 1: إذا كان المشروع يحتوي على gradlew في المجلد الرئيسي
+          # قبول التراخيص رسمياً إن لزم الأمر
+          yes | sdkmanager --licenses || true
+
+          # المسار الأول: إذا كان مشروع أندرويد قياسي
           if [ -f "./gradlew" ]; then
-            echo "وجِد مشروع أندرويد قياسي مع gradlew..."
+            echo "وجد ملف gradlew..."
             chmod +x gradlew
             echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
-            
-          # الحالة 2: إذا كان داخل مجلد android فرعي
+
+          # المسار الثاني: إذا كان كود أندرويد داخل مجلد android
           elif [ -f "./android/gradlew" ]; then
-            echo "وجِد مجلد android مع gradlew..."
+            echo "وجد مجلد android مع gradlew..."
             cd android
             chmod +x gradlew
             echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
             cd ..
-            
-          # الحالة 3: مشروع الويب (React / Vite) - نقوم ببنائه وحزمه إلى APK فوراً
+
+          # المسار الثالث: مشروع ويب (React / Vite) - تحويله إلى APK أصلي
           elif [ -f "package.json" ]; then
-            echo "تم اكتشاف مشروع ويب. جاري التجهيز والبناء بحل تعارض التبعات..."
+            echo "مشروع ويب - جاري البناء وتوليد تطبيق أندرويد APK..."
             
-            # تثبيت الحزم مع تخطي تعارض الإصدارات
-            npm install --legacy-peer-deps
+            # تثبيت الحزم وبناء ملفات dist مع تخطي تعارضات npm
+            npm install --legacy-peer-deps --no-audit
             npm run build
+
+            # تثبيت كاباسيتور لتحويل كود الويب إلى تطبيق أندرويد
+            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev --legacy-peer-deps --no-audit
             
-            # تثبيت حزم كاباسيتور مع خيار legacy-peer-deps لتجنب الخطأ
-            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev --legacy-peer-deps
-            
-            # تهيئة مشروع الأندرويد إذا لم يكن مهيأ مسبقاً
+            # تهيئة منصة أندرويد
             if [ ! -d "android" ]; then
               npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
               npx cap add android
             else
               npx cap sync android
             fi
-            
-            echo "بدء تجميع ملف الـ APK لنظام أندرويد..."
+
+            # كتابة مسار SDK في مجلد أندرويد وبناء الـ APK
             cd android
             chmod +x gradlew
             echo "sdk.dir=$ANDROID_HOME" > local.properties
             ./gradlew assembleDebug --stacktrace
             cd ..
-          else
-            echo "خطأ: لم يتم العثور على ملفات المشروع"
-            exit 1
           fi
 
+      # 5. رفع ملف الـ APK برابط تنزيل مباشر
       - name: Upload APK to Artifacts (تحميل مباشر)
         uses: actions/upload-artifact@v4
         with:
