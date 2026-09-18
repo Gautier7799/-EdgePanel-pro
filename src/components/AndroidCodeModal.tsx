@@ -989,10 +989,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # 4. قبول تراخيص Android SDK مسبقاً لمنع أي توقف
       - name: Accept Android Licenses

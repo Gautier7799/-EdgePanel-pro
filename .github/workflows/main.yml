@@ -25,11 +25,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. إعداد بيئة Node.js 20
-      - name: Set up Node.js 20
+      # 3. إعداد بيئة Node.js 22 (متوافقة تماماً مع Capacitor)
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # 4. قبول تراخيص Android SDK
       - name: Accept Android Licenses
