@@ -994,38 +994,50 @@ jobs:
         with:
           node-version: '20'
 
+      # 4. قبول تراخيص Android SDK مسبقاً لمنع أي توقف
+      - name: Accept Android Licenses
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          mkdir -p $ANDROID_HOME/licenses
+          echo -e "\n24333f8a63cbd8249728252f587329407fb8264e\n89338d0d107204538aab477266a70a2a8a4e4521\nd56f5187479451eabf01fb78af6dfcb131a6481e" > $ANDROID_HOME/licenses/android-sdk-license
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_HOME/licenses/android-sdk-preview-license
+
+      # 5. بناء ملف الـ APK وتجميعه
       - name: Build Android APK
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           CI: false
         run: |
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-          yes | sdkmanager --licenses || true
-
           if [ -f "./gradlew" ]; then
             chmod +x gradlew
             echo "sdk.dir=$ANDROID_HOME" > local.properties
-            ./gradlew assembleDebug --stacktrace
+            ./gradlew assembleDebug --no-daemon --stacktrace
           elif [ -f "./android/gradlew" ]; then
             cd android
             chmod +x gradlew
             echo "sdk.dir=$ANDROID_HOME" > local.properties
-            ./gradlew assembleDebug --stacktrace
+            ./gradlew assembleDebug --no-daemon --stacktrace
             cd ..
           elif [ -f "package.json" ]; then
-            npm install --legacy-peer-deps --no-audit
+            npm install --legacy-peer-deps --force --no-audit
             npm run build
-            npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev --legacy-peer-deps --no-audit
+            npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest --save-dev --legacy-peer-deps --force --no-audit
+            cat << 'EOF' > capacitor.config.json
+            {
+              "appId": "com.edgepanel.pro",
+              "appName": "EdgePanel Pro",
+              "webDir": "dist"
+            }
+            EOF
+            rm -f capacitor.config.ts
             if [ ! -d "android" ]; then
-              npx cap init "EdgePanel Pro" "com.edgepanel.pro" --web-dir dist
               npx cap add android
-            else
-              npx cap sync android
             fi
+            npx cap sync android
             cd android
             chmod +x gradlew
             echo "sdk.dir=$ANDROID_HOME" > local.properties
-            ./gradlew assembleDebug --stacktrace
+            ./gradlew assembleDebug --no-daemon --stacktrace
             cd ..
           fi
 
