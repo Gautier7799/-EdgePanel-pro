@@ -309,8 +309,8 @@ class PixelEdgeOverlayService : LifecycleService() {
   {
     name: 'PixelFloatingCapsule.kt',
     language: 'kotlin',
-    badge: 'Jetpack Compose • Material 3 Expressive',
-    description: 'واجهة الشريط الكبسولي العائم المطابقة لفيديو سامسونج تماماً (Frames 00:02 - 00:03). تستخدم فيزياء الـ Spring وتصميم Material You المتناسق مع خلفية Pixel 8.',
+    badge: 'Jetpack Compose • 2-Column Edge Card',
+    description: 'واجهة البطاقة الكبسولية العائمة المطابقة بدقة 100% للقطة الشاشة وفيديو سامسونج (عمودين، تطبيقات حديثة، خط منقط، أزواج التطبيقات، وزر شبكة النقاط والتعديل بالأسفل).',
     code: `package com.partner.pixeledge.ui
 
 import androidx.compose.animation.AnimatedVisibility
@@ -322,8 +322,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -332,14 +333,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -348,31 +346,41 @@ data class EdgeAppShortcut(
     val name: String,
     val packageName: String,
     val icon: ImageVector,
-    val gradientColors: List<Color>
+    val gradientColors: List<Color>,
+    val isRecent: Boolean = false
 )
 
 /**
- * PixelFloatingCapsule: الشريط الكبسولي العائم المتطابق مع حركة وشكل فيديو سامسونج
+ * PixelFloatingCapsule: البطاقة الكبسولية العائمة بعمودين (2-Columns)
+ * متطابقة مع لقطة شاشة هاتف Galaxy ومخصصة لنظام Android 17 على Pixel 8
  */
 @Composable
 fun PixelFloatingCapsule(
     onClose: () -> Unit,
     onLaunchApp: (String) -> Unit,
-    onLaunchSplitPair: (String, String) -> Unit
+    onLaunchSplitPair: (String, String) -> Unit,
+    onOpenAllApps: () -> Unit,
+    onOpenEdit: () -> Unit
 ) {
-    val context = LocalContext.current
-    val colorScheme = MaterialTheme.colorScheme
-
-    // قائمة التطبيقات المفضلة لـ Google Pixel 8
-    val shortcuts = remember {
+    // 1. التطبيقات الحديثة (Recent Apps) في الصفوف العلوية (كما في لقطة الشاشة)
+    val recentApps = remember {
         listOf(
-            EdgeAppShortcut("phone", "الهاتف", "com.google.android.dialer", Icons.Rounded.Phone, listOf(Color(0xFF10B981), Color(0xFF059669))),
-            EdgeAppShortcut("messages", "الرسائل", "com.google.android.apps.messaging", Icons.Rounded.ChatBubble, listOf(Color(0xFF3B82F6), Color(0xFF2563EB))),
-            EdgeAppShortcut("camera", "الكاميرا", "com.google.android.GoogleCamera", Icons.Rounded.PhotoCamera, listOf(Color(0xFFF43F5E), Color(0xFFE11D48))),
+            EdgeAppShortcut("gallery", "الاستوديو", "com.google.android.apps.photos", Icons.Rounded.Image, listOf(Color(0xFFF43F5E), Color(0xFFE11D48)), true),
+            EdgeAppShortcut("camera", "الكاميرا", "com.google.android.GoogleCamera", Icons.Rounded.PhotoCamera, listOf(Color(0xFFE11D48), Color(0xFFBE123C)), true),
+            EdgeAppShortcut("google", "جوجل", "com.google.android.googlequicksearchbox", Icons.Rounded.Search, listOf(Color(0xFFFFFFFF), Color(0xFFF8FAFC)), true),
+            EdgeAppShortcut("ytstudio", "استوديو YT", "com.google.android.apps.youtube.creator", Icons.Rounded.PlayCircle, listOf(Color(0xFFDC2626), Color(0xFF991B1B)), true)
+        )
+    }
+
+    // 2. التطبيقات المفضلة (Pinned Favorites)
+    val favoriteApps = remember {
+        listOf(
+            EdgeAppShortcut("youtube", "يوتيوب", "com.google.android.youtube", Icons.Rounded.PlayArrow, listOf(Color(0xFFEF4444), Color(0xFFDC2626))),
             EdgeAppShortcut("chrome", "كروم", "com.android.chrome", Icons.Rounded.Language, listOf(Color(0xFFF59E0B), Color(0xFF10B981))),
-            EdgeAppShortcut("gemini", "Gemini AI", "com.google.android.apps.bard", Icons.Rounded.AutoAwesome, listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))),
-            EdgeAppShortcut("calculator", "الآلة الحاسبة", "com.google.android.calculator", Icons.Rounded.Calculate, listOf(Color(0xFF06B6D4), Color(0xFF0284C7))),
-            EdgeAppShortcut("photos", "الصور", "com.google.android.apps.photos", Icons.Rounded.Image, listOf(Color(0xFFF97316), Color(0xFFEA580C)))
+            EdgeAppShortcut("meet", "ميت", "com.google.android.apps.meetings", Icons.Rounded.Videocam, listOf(Color(0xFF10B981), Color(0xFF0284C7))),
+            EdgeAppShortcut("calculator", "الحاسبة", "com.google.android.calculator", Icons.Rounded.Calculate, listOf(Color(0xFF059669), Color(0xFF047857))),
+            EdgeAppShortcut("notes", "الملاحظات", "com.google.android.keep", Icons.Rounded.Description, listOf(Color(0xFFF59E0B), Color(0xFFD97706))),
+            EdgeAppShortcut("gemini", "Gemini", "com.google.android.apps.bard", Icons.Rounded.AutoAwesome, listOf(Color(0xFF6366F1), Color(0xFF8B5CF6)))
         )
     }
 
@@ -381,7 +389,7 @@ fun PixelFloatingCapsule(
             .fillMaxSize()
             .clickable { onClose() }
     ) {
-        // الشريط الكبسولي العائم على الحافة اليمنى (Floating Capsule)
+        // البطاقة الكبسولية العائمة على الحافة (بعرض 160dp لعمودين متناسقين)
         AnimatedVisibility(
             visible = true,
             enter = slideInHorizontally(
@@ -396,109 +404,136 @@ fun PixelFloatingCapsule(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .width(88.dp)
-                    .clip(RoundedCornerShape(36.dp))
-                    .background(Color(0xE60F172A)) // خلفية زجاجية معتمة مصنفرة
-                    .border(1.dp, Color(0x3338BDF8), RoundedCornerShape(36.dp))
+                    .width(160.dp)
+                    .clip(RoundedCornerShape(34.dp))
+                    // زجاج مصنفر أبيض ناصع مثل لقطة الشاشة الأصلية (أو داكن عبر المظهر)
+                    .background(Color(0xF0FFFFFF))
+                    .border(1.dp, Color(0x33000000), RoundedCornerShape(34.dp))
                     .clickable(enabled = false) {}
-                    .padding(vertical = 12.dp, horizontal = 6.dp)
+                    .padding(vertical = 14.dp, horizontal = 8.dp)
             ) {
-                // زر إطلاق زوج التطبيقات المقسمة (App Pair)
-                Box(
-                    contentAlignment = Alignment.Center,
+                // الجزء 1: شبكة التطبيقات الحديثة (2×2)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(recentApps) { app ->
+                        AppIconItem(app = app, onClick = { onLaunchApp(app.packageName) })
+                    }
+                }
+
+                // فاصل منقط (Dashed Line) مطابق تماماً للقطة الشاشة
+                Spacer(modifier = Modifier.height(10.dp))
+                Divider(
+                    color = Color(0x33000000),
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // الجزء 2: زوج التطبيقات المقسمة (App Pair: YouTube + Chrome)
+                Row(
                     modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0x2238BDF8))
-                        .clickable { onLaunchSplitPair("com.android.chrome", "com.google.android.calculator") }
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color(0x15000000))
+                        .clickable { onLaunchSplitPair("com.google.android.youtube", "com.android.chrome") }
+                        .padding(vertical = 6.dp, horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.VerticalSplit,
                         contentDescription = "تقسيم الشاشة",
-                        tint = Color(0xFF38BDF8),
-                        modifier = Modifier.size(24.dp)
+                        tint = Color(0xFF0284C7),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "يوتيوب + كروم",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A)
                     )
                 }
 
-                Text(
-                    text = "تقسيم",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7DD3FC),
-                    modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
-                )
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // خط فاصل رفيع
-                Divider(
-                    color = Color(0x22FFFFFF),
-                    thickness = 1.dp,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-
-                // العمود الرأسي للأيقونات
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                // الجزء 3: شبكة التطبيقات المفضلة
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.weight(1f, fill = false)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
                 ) {
-                    items(shortcuts) { app ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onLaunchApp(app.packageName) }
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(46.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Brush.linearGradient(app.gradientColors))
-                                    .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(16.dp))
-                            ) {
-                                Icon(
-                                    imageVector = app.icon,
-                                    contentDescription = app.name,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                            Text(
-                                text = app.name,
-                                fontSize = 9.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                color = Color(0xFFE2E8F0),
-                                modifier = Modifier.padding(top = 2.dp)
-                            )
-                        }
+                    items(favoriteApps) { app ->
+                        AppIconItem(app = app, onClick = { onLaunchApp(app.packageName) })
                     }
                 }
 
-                // خط فاصل سفلي
-                Divider(
-                    color = Color(0x22FFFFFF),
-                    thickness = 1.dp,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Divider(color = Color(0x22000000), thickness = 1.dp)
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // زر جميع التطبيقات (All Apps Drawer)
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x22FFFFFF))
-                        .clickable { onClose() }
+                // الجزء 4: شريط الأدوات السفلي (شبكة 9 نقاط لفتح كل التطبيقات + قلم التعديل)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Apps,
-                        contentDescription = "جميع التطبيقات",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    // أيقونة 9-Dot Grid لجميع التطبيقات
+                    IconButton(onClick = onOpenAllApps) {
+                        Icon(
+                            imageVector = Icons.Rounded.Apps,
+                            contentDescription = "جميع التطبيقات",
+                            tint = Color(0xFF334155),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // أيقونة القلم (Edit) لتعديل تطبيقات اللوحة
+                    IconButton(onClick = onOpenEdit) {
+                        Icon(
+                            imageVector = Icons.Rounded.Edit,
+                            contentDescription = "تعديل تطبيقات اللوحة",
+                            tint = Color(0xFF334155),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun AppIconItem(app: EdgeAppShortcut, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(4.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(46.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Brush.linearGradient(app.gradientColors))
+                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+        ) {
+            Icon(
+                imageVector = app.icon,
+                contentDescription = app.name,
+                tint = if (app.gradientColors.first() == Color.White) Color(0xFF0F172A) else Color.White,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }

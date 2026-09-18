@@ -387,8 +387,8 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
         />
 
         {/* 
-          1. FLOATING CAPSULE MODE (Matching frames 00:02 - 00:03 of Samsung Video):
-          A sleek, floating rounded vertical pill card
+          1. FLOATING CAPSULE MODE (Matching frames 00:02 - 00:03 of Samsung Video and Screenshot 2-Column Card):
+          A sleek, floating rounded card with 2 columns, recent apps, and app pairs
         */}
         {settings.panelLayoutMode === 'floating-capsule' && (
           <FloatingAppsPill
@@ -401,6 +401,9 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
             onOpenSettings={() => {
               onUpdateSettings({ panelLayoutMode: 'full-drawer', activePanel: 'settings' });
             }}
+            onUpdateSettings={onUpdateSettings}
+            onTogglePinApp={onTogglePinApp}
+            onAddCustomApp={onAddCustomApp}
           />
         )}
 

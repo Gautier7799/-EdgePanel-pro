@@ -103,7 +103,7 @@ export const SettingsEdge: React.FC<SettingsEdgeProps> = ({
         </div>
       </div>
 
-      {/* Panel Layout Mode: Floating Capsule (Video) vs Full Drawer */}
+      {/* Panel Layout Mode: Floating Capsule (Video/Screenshot) vs Full Drawer */}
       <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-2">
         <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
           <Layers className="w-4 h-4 text-cyan-400" />
@@ -120,7 +120,7 @@ export const SettingsEdge: React.FC<SettingsEdgeProps> = ({
           >
             <span>كبسولة عائمة</span>
             <span className={`text-[9px] ${settings.panelLayoutMode === 'floating-capsule' ? 'text-slate-900 font-semibold' : 'text-cyan-400'}`}>
-              مثل فيديو سامسونج
+              مثل لقطة الشاشة والفيديو
             </span>
           </button>
 
@@ -138,6 +138,73 @@ export const SettingsEdge: React.FC<SettingsEdgeProps> = ({
             </span>
           </button>
         </div>
+
+        {/* Floating Capsule Columns & Glass Style */}
+        {settings.panelLayoutMode === 'floating-capsule' && (
+          <div className="pt-2 border-t border-white/10 space-y-2">
+            <div>
+              <span className="text-[11px] text-slate-300 block mb-1">عدد أعمدة التطبيقات:</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onUpdateSettings({ capsuleColumns: 2 })}
+                  className={`py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                    settings.capsuleColumns === 2
+                      ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                      : 'bg-white/5 text-slate-300 border-white/10'
+                  }`}
+                >
+                  عمودين (مثل الصورة)
+                </button>
+                <button
+                  onClick={() => onUpdateSettings({ capsuleColumns: 1 })}
+                  className={`py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                    settings.capsuleColumns === 1
+                      ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                      : 'bg-white/5 text-slate-300 border-white/10'
+                  }`}
+                >
+                  عمود واحد رفيع
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[11px] text-slate-300 block mb-1">لون الزجاج المصنفر:</span>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  onClick={() => onUpdateSettings({ capsuleStyle: 'frosted-light' })}
+                  className={`py-1 rounded-lg text-[11px] font-bold transition-all border ${
+                    settings.capsuleStyle === 'frosted-light'
+                      ? 'bg-white text-slate-900 border-white shadow'
+                      : 'bg-white/5 text-slate-300 border-white/10'
+                  }`}
+                >
+                  أبيض (الصورة)
+                </button>
+                <button
+                  onClick={() => onUpdateSettings({ capsuleStyle: 'frosted-dark' })}
+                  className={`py-1 rounded-lg text-[11px] font-bold transition-all border ${
+                    settings.capsuleStyle === 'frosted-dark'
+                      ? 'bg-slate-800 text-white border-cyan-400'
+                      : 'bg-white/5 text-slate-300 border-white/10'
+                  }`}
+                >
+                  داكن (Dark)
+                </button>
+                <button
+                  onClick={() => onUpdateSettings({ capsuleStyle: 'monet' })}
+                  className={`py-1 rounded-lg text-[11px] font-bold transition-all border ${
+                    settings.capsuleStyle === 'monet'
+                      ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                      : 'bg-white/5 text-slate-300 border-white/10'
+                  }`}
+                >
+                  Material You
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pixel 8 Material You (Monet) Color Palette */}

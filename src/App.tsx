@@ -280,27 +280,53 @@ export default function App() {
               </div>
 
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">شكل اللوحة:</label>
+                <label className="text-[10px] text-slate-400 block mb-1">تخطيط الكبسولة (لقطة الشاشة):</label>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
-                    onClick={() => handleUpdateSettings({ panelLayoutMode: 'floating-capsule' })}
+                    onClick={() => handleUpdateSettings({ capsuleColumns: 2, panelLayoutMode: 'floating-capsule' })}
                     className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.panelLayoutMode === 'floating-capsule'
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                      settings.capsuleColumns === 2 && settings.panelLayoutMode === 'floating-capsule'
+                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
                         : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
                     }`}
                   >
-                    كبسولة عائمة (فيديو)
+                    عمودين (مثل الصورة)
                   </button>
                   <button
-                    onClick={() => handleUpdateSettings({ panelLayoutMode: 'full-drawer' })}
+                    onClick={() => handleUpdateSettings({ capsuleColumns: 1, panelLayoutMode: 'floating-capsule' })}
                     className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
-                      settings.panelLayoutMode === 'full-drawer'
-                        ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                      settings.capsuleColumns === 1 && settings.panelLayoutMode === 'floating-capsule'
+                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
                         : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
                     }`}
                   >
-                    لوحة جانبية كاملة
+                    عمود واحد (الفيديو)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">لون الزجاج المصنفر:</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() => handleUpdateSettings({ capsuleStyle: 'frosted-light' })}
+                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                      settings.capsuleStyle === 'frosted-light'
+                        ? 'bg-white text-slate-950 border-white shadow-sm font-black'
+                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                    }`}
+                  >
+                    أبيض مصنفر (الصورة)
+                  </button>
+                  <button
+                    onClick={() => handleUpdateSettings({ capsuleStyle: 'frosted-dark' })}
+                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                      settings.capsuleStyle === 'frosted-dark'
+                        ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
+                        : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+                    }`}
+                  >
+                    زجاج داكن (Dark)
                   </button>
                 </div>
               </div>

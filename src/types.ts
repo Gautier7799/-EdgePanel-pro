@@ -4,6 +4,19 @@ export type DeviceModel = 'pixel-8' | 'galaxy-s24';
 export type AndroidVersion = 'android-17' | 'oneui-6';
 export type PanelLayoutMode = 'floating-capsule' | 'full-drawer';
 export type MonetPalette = 'bay-blue' | 'hazel-green' | 'obsidian-dark' | 'rose-gold' | 'sage-mint';
+export type CapsuleStyle = 'frosted-light' | 'frosted-dark' | 'monet';
+
+export interface AppPairItem {
+  id: string;
+  name: string;
+  nameAr: string;
+  app1Id: string;
+  app2Id: string;
+  app1Name: string;
+  app2Name: string;
+  app1Color: string;
+  app2Color: string;
+}
 
 export interface AppItem {
   id: string;
@@ -64,6 +77,12 @@ export interface PanelSettings {
   monetPalette: MonetPalette;
   enableTileService: boolean;
   enableAccessibilitySplitScreen: boolean;
+
+  // Exact UI Options from User Screenshot
+  capsuleColumns: 1 | 2; // 2 columns like screenshot or 1 column like video
+  capsuleStyle: CapsuleStyle; // 'frosted-light' (white like screenshot), 'frosted-dark', or 'monet'
+  showRecentApps: boolean;
+  appPairs: AppPairItem[];
 }
 
 export type ViewMode = 'phone' | 'full' | 'code';
