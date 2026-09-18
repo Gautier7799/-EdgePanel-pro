@@ -67,16 +67,8 @@ jobs:
             # تثبيت capacitor
             npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest --save-dev --legacy-peer-deps --force --no-audit
 
-            # إنشاء ملف capacitor.config.json لتفادي خطأ TypeScript loader
-            cat << 'EOF' > capacitor.config.json
-            {
-              "appId": "com.edgepanel.pro",
-              "appName": "EdgePanel Pro",
-              "webDir": "dist"
-            }
-            EOF
-
-            # حذف أي ملف ts متبقي للكونفيج
+            # ضمان وجود ملف capacitor.config.json وحذف أي ملف ts متبقي
+            echo '{"appId":"com.edgepanel.pro","appName":"EdgePanel Pro","webDir":"dist"}' > capacitor.config.json
             rm -f capacitor.config.ts
 
             # إضافة منصة أندرويد ومزامنتها

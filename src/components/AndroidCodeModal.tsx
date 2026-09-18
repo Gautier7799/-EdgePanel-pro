@@ -1022,13 +1022,7 @@ jobs:
             npm install --legacy-peer-deps --force --no-audit
             npm run build
             npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest --save-dev --legacy-peer-deps --force --no-audit
-            cat << 'EOF' > capacitor.config.json
-            {
-              "appId": "com.edgepanel.pro",
-              "appName": "EdgePanel Pro",
-              "webDir": "dist"
-            }
-            EOF
+            echo '{"appId":"com.edgepanel.pro","appName":"EdgePanel Pro","webDir":"dist"}' > capacitor.config.json
             rm -f capacitor.config.ts
             if [ ! -d "android" ]; then
               npx cap add android
