@@ -760,6 +760,10 @@ class QuickToolsSensorManager(context: Context) : SensorEventListener {
     <!-- أذونات العرض فوق التطبيقات لنظام أندرويد -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     
+    <!-- إذن قراءة أيقونات وتطبيقات النظام الحقيقية المثبتة على الهاتف -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" 
+        tools:ignore="QueryAllPackagesPermission" />
+    
     <!-- أذونات الخدمات الأمامية لنظام Android 14/15/16/17 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -860,6 +864,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             PixelEdgeSetupScreen(
                 onGrantOverlay = { checkAndRequestOverlayPermission() },
+                onGrantAccessibility = { openAccessibilitySettings() },
+                onIgnoreBattery = { requestIgnoreBatteryOptimization() },
                 onStartEdgeService = { startEdgeOverlayService() }
             )
         }
@@ -875,6 +881,25 @@ class MainActivity : ComponentActivity() {
                 startActivity(intent)
             } else {
                 Toast.makeText(this, "إذن الظهور فوق التطبيقات ممنوح بالفعل!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun openAccessibilitySettings() {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        startActivity(intent)
+        Toast.makeText(this, "ابحث عن Pixel Edge Panel وقم بتفعيله لتقسيم الشاشة", Toast.LENGTH_LONG).show()
+    }
+
+    private fun requestIgnoreBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
             }
         }
     }
@@ -899,6 +924,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PixelEdgeSetupScreen(
     onGrantOverlay: () -> Unit,
+    onGrantAccessibility: () -> Unit,
+    onIgnoreBattery: () -> Unit,
     onStartEdgeService: () -> Unit
 ) {
     Surface(
@@ -927,24 +954,53 @@ fun PixelEdgeSetupScreen(
             )
 
             Text(
-                text = "Android 17 • تجربة لوحة سامسونج على هواتف جوجل بيكسل",
+                text = "Android 17 • لوحة سامسونج بأذونات النظام وأيقونات الهاتف الحقيقية",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray,
-                modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
+                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
             )
 
+            // 1. إذن الظهور فوق التطبيقات
             Button(
                 onClick = onGrantOverlay,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Rounded.Security, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("منح إذن الظهور فوق التطبيقات")
+                Text("1. منح إذن الظهور فوق التطبيقات")
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
+            // 2. إذن إمكانية الوصول لتقسيم الشاشة
+            Button(
+                onClick = onGrantAccessibility,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(Icons.Rounded.SplitScreen, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("2. تفعيل تقسيم الشاشة (إمكانية الوصول)")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 3. إذن تحسين البطارية
+            OutlinedButton(
+                onClick = onIgnoreBattery,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(Icons.Rounded.BatteryChargingFull, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("3. استثناء من توفير البطارية (0% خمول)")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 4. تشغيل الخدمة
             Button(
                 onClick = onStartEdgeService,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -953,7 +1009,7 @@ fun PixelEdgeSetupScreen(
             ) {
                 Icon(Icons.Rounded.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("تشغيل مقبض الحافة الآن")
+                Text("تشغيل لوحة الحافة في النظام الآن")
             }
         }
     }
